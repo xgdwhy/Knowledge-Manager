@@ -182,6 +182,31 @@ services:
       - knowledge-network
     restart: unless-stopped
 
+  # 试验数据网盘
+  nextcloud:
+    image: nextcloud:latest
+    container_name: knowledge-nextcloud
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: nextcloud
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      NEXTCLOUD_TRUSTED_DOMAINS: ${DOMAIN}
+      OBJECTSTORE_S3_HOST: minio
+      OBJECTSTORE_S3_PORT: 9000
+      OBJECTSTORE_S3_BUCKET: nextcloud-data
+      OBJECTSTORE_S3_KEY: ${MINIO_ROOT_USER}
+      OBJECTSTORE_S3_SECRET: ${MINIO_ROOT_PASSWORD}
+      OBJECTSTORE_S3_USE_SSL: "false"
+    volumes:
+      - nextcloud-data:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
 networks:
   knowledge-network:
     driver: bridge
