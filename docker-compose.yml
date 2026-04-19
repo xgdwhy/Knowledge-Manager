@@ -43,6 +43,24 @@ services:
       retries: 3
     restart: unless-stopped
 
+  # 搜索引擎
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: knowledge-meilisearch
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_ENV: production
+    volumes:
+      - meili-data:/meili_data
+    networks:
+      - knowledge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
 networks:
   knowledge-network:
     driver: bridge
