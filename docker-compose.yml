@@ -155,6 +155,33 @@ services:
       - knowledge-network
     restart: unless-stopped
 
+  # 任务看板
+  plane:
+    image: makeplane/plane:latest
+    container_name: knowledge-plane
+    environment:
+      WEB_URL: https://${DOMAIN}/tasks/
+      CORS_ALLOWED_ORIGINS: "https://${DOMAIN}"
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/plane
+      REDIS_URL: redis://plane-redis:6379/
+      SECRET_KEY: ${MEILI_MASTER_KEY}
+    volumes:
+      - plane-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
+  # Plane Redis
+  plane-redis:
+    image: redis:alpine
+    container_name: knowledge-plane-redis
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
 networks:
   knowledge-network:
     driver: bridge
