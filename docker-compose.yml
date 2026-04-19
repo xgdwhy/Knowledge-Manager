@@ -121,6 +121,40 @@ services:
       - knowledge-network
     restart: unless-stopped
 
+  # 代码托管
+  gitea:
+    image: gitea/gitea:latest
+    container_name: knowledge-gitea
+    environment:
+      GITEA__database__DB_TYPE: postgres
+      GITEA__database__HOST: postgres:5432
+      GITEA__database__NAME: gitea
+      GITEA__database__USER: ${POSTGRES_USER}
+      GITEA__database__PASSWD: ${POSTGRES_PASSWORD}
+      GITEA__server__ROOT_URL: https://${DOMAIN}/code/
+      GITEA__server__SSH_DOMAIN: ${DOMAIN}
+      GITEA__server__SSH_PORT: 2222
+      GITEA__openid__ENABLE_OPENID_SIGNIN: "true"
+      GITEA__openid__ENABLE_OPENID_SIGNUP: "false"
+      GITEA__lfs__START_SERVER: "true"
+      GITEA__lfs__STORAGE_TYPE: minio
+      GITEA__lfs__MINIO_ENDPOINT: minio:9000
+      GITEA__lfs__MINIO_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      GITEA__lfs__MINIO_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      GITEA__lfs__MINIO_BUCKET: gitea-lfs
+      GITEA__lfs__MINIO_USE_SSL: "false"
+    ports:
+      - "2222:22"
+    volumes:
+      - gitea-data:/var/lib/gitea
+      - gitea-repos:/data/git
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
 networks:
   knowledge-network:
     driver: bridge
