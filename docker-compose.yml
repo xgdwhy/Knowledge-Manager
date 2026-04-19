@@ -84,6 +84,17 @@ services:
       - knowledge-network
     restart: unless-stopped
 
+  # 统一门户
+  portal:
+    build: ./portal
+    container_name: knowledge-portal
+    environment:
+      VITE_KEYCLOAK_URL: https://${DOMAIN}/auth
+      VITE_MEILISEARCH_URL: https://${DOMAIN}/storage
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
   # 反向代理
   nginx:
     image: nginx:alpine
