@@ -106,6 +106,21 @@ services:
       - knowledge-network
     restart: unless-stopped
 
+  # 知识库
+  dokuwiki:
+    image: bitnami/dokuwiki:latest
+    container_name: knowledge-dokuwiki
+    environment:
+      DOKUWIKI_USERNAME: admin
+      DOKUWIKI_PASSWORD: ${DOKUWIKI_PASSWORD}
+      DOKUWIKI_EMAIL: admin@company.local
+      DOKUWIKI_WIKI_NAME: Knowledge Platform
+    volumes:
+      - dokuwiki-data:/bitnami/dokuwiki
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
 networks:
   knowledge-network:
     driver: bridge
