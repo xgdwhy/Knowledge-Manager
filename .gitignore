@@ -1,0 +1,6 @@
+.env
+nginx/ssl/*.key
+nginx/ssl/*.pem
+*.log
+node_modules/
+dist/

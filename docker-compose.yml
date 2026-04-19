@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  # 基础设施服务将在后续任务中添加
+
+networks:
+  knowledge-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  minio-data:
+  meili-data:
+  keycloak-data:
+  dokuwiki-data:
+  gitea-data:
+  gitea-repos:
+  plane-data:
+  nextcloud-data:
