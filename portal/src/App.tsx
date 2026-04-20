@@ -4,7 +4,7 @@ import { Layout } from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 
 function App() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -14,15 +14,7 @@ function App() {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="login-screen">
-        <h1>知识管理平台</h1>
-        <p>请登录以访问系统</p>
-      </div>
-    );
-  }
-
+  // 未登录时也显示 Header 和 Dashboard
   return (
     <Layout>
       <Dashboard />

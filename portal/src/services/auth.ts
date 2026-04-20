@@ -2,7 +2,7 @@
 import Keycloak from "keycloak-js";
 
 const keycloakConfig = {
-  url: window.location.origin + "/auth",
+  url: "http://47.79.145.215:8080/auth",
   realm: "knowledge-platform",
   clientId: "portal",
 };

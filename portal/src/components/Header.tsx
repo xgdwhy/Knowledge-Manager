@@ -2,7 +2,7 @@
 import { useAuth } from "../hooks/useAuth";
 
 export default function Header() {
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
 
   const navItems = [
     { label: "首页", href: "/" },
@@ -11,6 +11,12 @@ export default function Header() {
     { label: "任务", href: "/tasks/" },
     { label: "试验数据", href: "/data/" },
   ];
+
+  const handleLogin = () => {
+    // 直接打开 Keycloak 账户管理页面，让用户登录
+    window.location.href =
+      "http://47.79.145.215:8080/auth/realms/master/account/";
+  };
 
   return (
     <header className="header">
@@ -36,7 +42,7 @@ export default function Header() {
               </button>
             </div>
           ) : (
-            <button onClick={login} className="login-btn">
+            <button onClick={handleLogin} className="login-btn">
               登录
             </button>
           )}
