@@ -108,9 +108,7 @@ services:
     depends_on:
       - portal
       - keycloak
-      - dokuwiki
       - gitea
-      - plane
       - nextcloud
       - minio
     networks:

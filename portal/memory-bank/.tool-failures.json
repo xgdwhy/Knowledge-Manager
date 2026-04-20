@@ -1,0 +1,20 @@
+{
+  "failures": [
+    {
+      "tool": "Bash",
+      "error": "unknown error",
+      "timestamp": 1776594105158
+    },
+    {
+      "tool": "Bash",
+      "error": "unknown error",
+      "timestamp": 1776594123950
+    },
+    {
+      "tool": "Bash",
+      "error": "unknown error",
+      "timestamp": 1776594173603
+    }
+  ],
+  "sessionCount": 3
+}

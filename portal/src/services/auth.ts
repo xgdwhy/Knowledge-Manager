@@ -32,14 +32,14 @@ export class AuthService {
 
       if (authenticated && keycloak.tokenParsed) {
         this.userInfo = {
-          id: keycloak.tokenParsed.sub,
+          id: keycloak.tokenParsed.sub || "",
           name:
             keycloak.tokenParsed.name ||
             keycloak.tokenParsed.preferred_username ||
             "",
           email: keycloak.tokenParsed.email || "",
           roles: keycloak.tokenParsed.realm_access?.roles || [],
-          groups: keycloak.tokenParsed.groups || [],
+          groups: (keycloak.tokenParsed as any).groups || [],
         };
       }
 
