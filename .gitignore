@@ -4,3 +4,4 @@ nginx/ssl/*.pem
 *.log
 node_modules/
 dist/
+memory-bank/
