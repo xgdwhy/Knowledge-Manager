@@ -28,6 +28,16 @@ export default function SearchBar() {
     }
   };
 
+  const handleBlur = () => {
+    setTimeout(() => setShowResults(false), 200);
+  };
+
+  const handleFocus = () => {
+    if (query.length >= 2) {
+      setShowResults(true);
+    }
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "wiki":
@@ -46,30 +56,45 @@ export default function SearchBar() {
   return (
     <div className="search-bar">
       <div className="search-input-wrapper">
+        <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+          <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
         <input
           type="text"
           placeholder="搜索知识、代码、任务、文件..."
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           className="search-input"
+          aria-label="全局搜索"
         />
-        {loading && <span className="search-loading">搜索中...</span>}
+        {loading && <span className="search-loading"><span className="loading-spinner"></span></span>}
       </div>
 
-      {showResults && results.length > 0 && (
-        <div className="search-results">
-          {results.map((doc) => (
-            <a key={doc.id} href={doc.url} className="search-result-item">
-              <span className="result-icon">{getTypeIcon(doc.type)}</span>
-              <div className="result-content">
-                <div className="result-title">{doc.title}</div>
-                <div className="result-meta">
-                  <span>{doc.project}</span>
-                  <span>{doc.author}</span>
+      {showResults && (
+        <div className="search-results" role="listbox">
+          {results.length > 0 ? (
+            results.map((doc) => (
+              <a key={doc.id} href={doc.url} className="search-result-item" role="option">
+                <span className="result-icon">{getTypeIcon(doc.type)}</span>
+                <div className="result-content">
+                  <div className="result-title">{doc.title}</div>
+                  <div className="result-meta">
+                    <span>{doc.project}</span>
+                    <span>·</span>
+                    <span>{doc.author}</span>
+                  </div>
                 </div>
-              </div>
-            </a>
-          ))}
+              </a>
+            ))
+          ) : (
+            <div className="search-empty">
+              <p>未找到相关结果</p>
+              <span>尝试其他关键词</span>
+            </div>
+          )}
         </div>
       )}
     </div>

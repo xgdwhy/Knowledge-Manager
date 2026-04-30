@@ -79,12 +79,20 @@ services:
       KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_PROXY: "edge"
       KC_HTTP_RELATIVE_PATH: /auth
+      # 内存优化配置
+      JAVA_OPTS_APPEND: "-Xms128m -Xmx256m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=128m"
     command: start-dev
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - knowledge-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
     restart: unless-stopped
 
   # 统一门户
@@ -114,6 +122,7 @@ services:
       - gitea
       - nextcloud
       - minio
+      - plane-proxy
     networks:
       - knowledge-network
     restart: unless-stopped
@@ -167,29 +176,224 @@ services:
       - knowledge-network
     restart: unless-stopped
 
-  # 任务看板
-  plane:
-    image: plane/plane:latest
-    container_name: knowledge-plane
+  # 任务看板 - Plane
+  plane-web:
+    image: makeplane/plane-frontend:latest
+    container_name: knowledge-plane-web
+    command: node web/server.js
+    working_dir: /app
     environment:
-      WEB_URL: https://${DOMAIN}/tasks/
-      CORS_ALLOWED_ORIGINS: "https://${DOMAIN}"
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/plane
-      REDIS_URL: redis://plane-redis:6379/
-      SECRET_KEY: ${MEILI_MASTER_KEY}
-    volumes:
-      - plane-data:/app/data
+      NEXT_PUBLIC_API_BASE_URL: http://plane-api:8000
+      NEXT_PUBLIC_DEPLOY_URL: http://47.79.145.215:8080/tasks
+      WEB_URL: http://47.79.145.215:8080/tasks
     depends_on:
-      postgres:
-        condition: service_healthy
+      - plane-api
     networks:
       - knowledge-network
     restart: unless-stopped
 
-  # Plane Redis
+  plane-admin:
+    image: makeplane/plane-admin:latest
+    container_name: knowledge-plane-admin
+    command: node admin/server.js
+    working_dir: /app
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://plane-api:8000
+    depends_on:
+      - plane-api
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
+  plane-space:
+    image: makeplane/plane-space:latest
+    container_name: knowledge-plane-space
+    command: node space/server.js
+    working_dir: /app
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://plane-api:8000
+    depends_on:
+      - plane-api
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
+  plane-migrator:
+    image: makeplane/plane-backend:latest
+    container_name: knowledge-plane-migrator
+    command: ./bin/docker-entrypoint-migrator.sh
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: plane
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://plane-redis:6379/
+      RABBITMQ_HOST: plane-mq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: plane
+      RABBITMQ_PASSWORD: plane123
+      RABBITMQ_VHOST: plane
+      SECRET_KEY: ${MEILI_MASTER_KEY}
+      DOCKERIZED: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      plane-redis:
+        condition: service_started
+    networks:
+      - knowledge-network
+    restart: "no"
+
+  plane-api:
+    image: makeplane/plane-backend:latest
+    container_name: knowledge-plane-api
+    command: ./bin/docker-entrypoint-api.sh
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: plane
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://plane-redis:6379/
+      RABBITMQ_HOST: plane-mq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: plane
+      RABBITMQ_PASSWORD: plane123
+      RABBITMQ_VHOST: plane
+      SECRET_KEY: ${MEILI_MASTER_KEY}
+      WEB_URL: http://47.79.145.215:8080/tasks
+      CORS_ALLOWED_ORIGINS: "http://47.79.145.215:8080"
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_S3_BUCKET_NAME: plane-uploads
+      DOCKERIZED: 1
+      USE_MINIO: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      plane-redis:
+        condition: service_started
+      plane-mq:
+        condition: service_started
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
+  plane-worker:
+    image: makeplane/plane-backend:latest
+    container_name: knowledge-plane-worker
+    command: ./bin/docker-entrypoint-worker.sh
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: plane
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://plane-redis:6379/
+      RABBITMQ_HOST: plane-mq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: plane
+      RABBITMQ_PASSWORD: plane123
+      RABBITMQ_VHOST: plane
+      SECRET_KEY: ${MEILI_MASTER_KEY}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_S3_BUCKET_NAME: plane-uploads
+      DOCKERIZED: 1
+      USE_MINIO: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      plane-redis:
+        condition: service_started
+      plane-mq:
+        condition: service_started
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
+  plane-beat:
+    image: makeplane/plane-backend:latest
+    container_name: knowledge-plane-beat
+    command: ./bin/docker-entrypoint-beat.sh
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: plane
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://plane-redis:6379/
+      RABBITMQ_HOST: plane-mq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: plane
+      RABBITMQ_PASSWORD: plane123
+      RABBITMQ_VHOST: plane
+      SECRET_KEY: ${MEILI_MASTER_KEY}
+      DOCKERIZED: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      plane-redis:
+        condition: service_started
+      plane-mq:
+        condition: service_started
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
+  plane-live:
+    image: makeplane/plane-live:latest
+    container_name: knowledge-plane-live
+    command: node live/dist/server.js
+    working_dir: /app
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: plane
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_URL: redis://plane-redis:6379/
+      RABBITMQ_URL: amqp://plane:plane123@plane-mq:5672/plane
+    depends_on:
+      - plane-redis
+      - plane-mq
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
+  plane-proxy:
+    image: makeplane/plane-proxy:latest
+    container_name: knowledge-plane-proxy
+    environment:
+      FILE_SIZE_LIMIT: "52428800"
+      BUCKET_NAME: "uploads"
+    depends_on:
+      - plane-web
+      - plane-admin
+      - plane-space
+      - plane-api
+      - plane-live
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
   plane-redis:
-    image: redis:alpine
+    image: valkey/valkey:7.2-alpine
     container_name: knowledge-plane-redis
+    networks:
+      - knowledge-network
+    restart: unless-stopped
+
+  plane-mq:
+    image: rabbitmq:3.13-alpine
+    container_name: knowledge-plane-mq
+    environment:
+      RABBITMQ_DEFAULT_USER: plane
+      RABBITMQ_DEFAULT_PASS: plane123
+      RABBITMQ_DEFAULT_VHOST: plane
     networks:
       - knowledge-network
     restart: unless-stopped

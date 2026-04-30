@@ -2,19 +2,23 @@
 import { useAuth } from "./hooks/useAuth";
 import { Layout } from "./components/Layout";
 import Dashboard from "./components/Dashboard";
+import LoginPage from "./components/LoginPage";
 
 function App() {
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated, login } = useAuth();
 
   if (isLoading) {
     return (
       <div className="loading-screen">
-        <div className="loading-spinner">加载中...</div>
+        <div className="loading-spinner"></div>
       </div>
     );
   }
 
-  // 未登录时也显示 Header 和 Dashboard
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={login} />;
+  }
+
   return (
     <Layout>
       <Dashboard />
