@@ -304,7 +304,26 @@ curl -H "Authorization: Bearer Km2024!Meili@Master" \
 - Docker Compose 2.0+
 - 至少 4GB 内存（推荐 8GB）
 
-### 部署步骤
+### 使用脚本部署（推荐）
+
+```bash
+# 1. 安装 Docker（如未安装）
+./scripts/install-docker.sh
+
+# 2. 加载本地镜像（离线部署）
+./scripts/load-images.sh
+
+# 3. 启动所有服务
+./scripts/start.sh
+
+# 4. 停止所有服务
+./scripts/stop.sh
+
+# 5. 保存镜像到本地
+./scripts/save-images.sh
+```
+
+### 手动部署步骤
 
 ```bash
 # 1. 克隆项目
