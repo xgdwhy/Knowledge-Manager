@@ -74,7 +74,7 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_HOSTNAME: 47.79.145.215
+      KC_HOSTNAME: 127.0.0.1
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_PROXY: "edge"
@@ -100,8 +100,8 @@ services:
     build: ./portal
     container_name: knowledge-portal
     environment:
-      VITE_KEYCLOAK_URL: http://47.79.145.215:8080/auth
-      VITE_MEILISEARCH_URL: http://47.79.145.215:8080/storage
+      VITE_KEYCLOAK_URL: http://127.0.0.1:8080/auth
+      VITE_MEILISEARCH_URL: http://127.0.0.1:8080/storage
     networks:
       - knowledge-network
     restart: unless-stopped
@@ -184,8 +184,8 @@ services:
     working_dir: /app
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://plane-api:8000
-      NEXT_PUBLIC_DEPLOY_URL: http://47.79.145.215:8080/tasks
-      WEB_URL: http://47.79.145.215:8080/tasks
+      NEXT_PUBLIC_DEPLOY_URL: http://127.0.0.1:8080/tasks
+      WEB_URL: http://127.0.0.1:8080/tasks
     depends_on:
       - plane-api
     networks:
@@ -262,8 +262,8 @@ services:
       RABBITMQ_PASSWORD: plane123
       RABBITMQ_VHOST: plane
       SECRET_KEY: ${MEILI_MASTER_KEY}
-      WEB_URL: http://47.79.145.215:8080/tasks
-      CORS_ALLOWED_ORIGINS: "http://47.79.145.215:8080"
+      WEB_URL: http://127.0.0.1:8080/tasks
+      CORS_ALLOWED_ORIGINS: "http://127.0.0.1:8080"
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
       AWS_S3_ENDPOINT_URL: http://minio:9000
